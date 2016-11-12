@@ -13,16 +13,14 @@ import (
 )
 
 const (
-	SAMPLE_NAME = "Mattermost Bot Sample"
+	USER_EMAIL	  = "matterbot@example.com"
+	USER_PASSWORD = "password123"
+	USER_NAME	  = "matterbot2"
+	USER_FIRST	  = "Matter"
+	USER_LAST	  = "Bot"
 
-	USER_EMAIL    = "bot@example.com"
-	USER_PASSWORD = "password1"
-	USER_NAME     = "samplebot"
-	USER_FIRST    = "Sample"
-	USER_LAST     = "Bot"
-
-	TEAM_NAME        = "botsample"
-	CHANNEL_LOG_NAME = "debugging-for-sample-bot"
+	TEAM_NAME		 = "sample"
+	CHANNEL_LOG_NAME = "Matterbot"
 )
 
 var client *model.Client
@@ -36,7 +34,7 @@ var debuggingChannel *model.Channel
 // Documentation for the Go driver can be found
 // at https://godoc.org/github.com/mattermost/platform/model#Client
 func main() {
-	println(SAMPLE_NAME)
+	println(USER_NAME)
 
 	SetupGracefulShutdown()
 
@@ -64,8 +62,9 @@ func main() {
 	client.SetTeamId(botTeam.Id)
 
 	// Lets create a bot channel for logging debug messages into
-	CreateBotDebuggingChannelIfNeeded()
-	SendMsgToDebuggingChannel("_"+SAMPLE_NAME+" has **started** running_", "")
+	CreateMatterbotChannelIfNeeded()
+	SendMsg("_"+USER_NAME+" has **started** running_", "")
+	SendMsg(USER_NAME+" will let you know if you are kicked from a channel", "")
 
 	// Lets start listening to some channels via the websocket!
 	webSocketClient, err := model.NewWebSocketClient("ws://localhost:8065", client.AuthToken)
@@ -150,7 +149,7 @@ func FindBotTeam() {
 	}
 }
 
-func CreateBotDebuggingChannelIfNeeded() {
+func CreateMatterbotChannelIfNeeded() {
 	if channelsResult, err := client.GetChannels(""); err != nil {
 		println("We failed to get the channels")
 		PrintError(err)
@@ -169,8 +168,8 @@ func CreateBotDebuggingChannelIfNeeded() {
 	// Looks like we need to create the logging channel
 	channel := &model.Channel{}
 	channel.Name = CHANNEL_LOG_NAME
-	channel.DisplayName = "Debugging For Sample Bot"
-	channel.Purpose = "This is used as a test channel for logging bot debug messages"
+	channel.DisplayName = "MatterBot"
+	channel.Purpose = "Ask MatterBot anything you need help with"
 	channel.Type = model.CHANNEL_OPEN
 	if channelResult, err := client.CreateChannel(channel); err != nil {
 		println("We failed to create the channel " + CHANNEL_LOG_NAME)
@@ -181,7 +180,7 @@ func CreateBotDebuggingChannelIfNeeded() {
 	}
 }
 
-func SendMsgToDebuggingChannel(msg string, replyToId string) {
+func SendMsg(msg string, replyToId string) {
 	post := &model.Post{}
 	post.ChannelId = debuggingChannel.Id
 	post.Message = msg
@@ -221,30 +220,30 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		// if you see any word matching 'alive' then respond
 		if matched, _ := regexp.MatchString(`(?:^|\W)alive(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
+			SendMsg("Yes I'm running", post.Id)
 			return
 		}
 
 		// if you see any word matching 'up' then respond
 		if matched, _ := regexp.MatchString(`(?:^|\W)up(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
+			SendMsg("Yes I'm running", post.Id)
 			return
 		}
 
 		// if you see any word matching 'running' then respond
 		if matched, _ := regexp.MatchString(`(?:^|\W)running(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
+			SendMsg("Yes I'm running", post.Id)
 			return
 		}
 
 		// if you see any word matching 'hello' then respond
 		if matched, _ := regexp.MatchString(`(?:^|\W)hello(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
+			SendMsg("Yes I'm running", post.Id)
 			return
 		}
 	}
 
-	SendMsgToDebuggingChannel("I did not understand you!", post.Id)
+	SendMsg("I did not understand you!", post.Id)
 }
 
 func PrintError(err *model.AppError) {
@@ -263,7 +262,7 @@ func SetupGracefulShutdown() {
 				webSocketClient.Close()
 			}
 
-			SendMsgToDebuggingChannel("_"+SAMPLE_NAME+" has **stopped** running_", "")
+			SendMsg("_"+USER_NAME+" has **stopped** running_", "")
 			os.Exit(0)
 		}
 	}()
